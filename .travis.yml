@@ -1,0 +1,23 @@
+language: generic
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t ethnatscolaire/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true ethnatscolaire/react-test npm test
+
+after_success:
+  - docker build -t ethnatscolaire/multi-client ./client
+  - docker build -t ethnatscolaire/multi-nginx ./nginx
+  - docker build -t ethnatscolaire/multi-server ./server
+  - docker build -t ethnatscolaire/multi-worker ./worker
+  # Log in to the docker CI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Push images
+  - docker push ethnatscolaire/multi-client
+  - docker push ethnatscolaire/multi-nginx
+  - docker push ethnatscolaire/multi-server
+  - docker push ethnatscolaire/multi-worker
